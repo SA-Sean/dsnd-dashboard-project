@@ -18,7 +18,7 @@ class QueryMixin:
     # that receives an sql query as a string
     # and returns the query's result
     # as a pandas dataframe
-    def pandas_query(sql_query:str) -> pd.DataFrame:
+    def pandas_query(self, sql_query:str) -> pd.DataFrame:
 
         """
         Excutes and SQL query against a database connection and returns the result as a padas dataframe
@@ -50,7 +50,7 @@ class QueryMixin:
     # and returns the query's result as
     # a list of tuples. (You will need
     # to use an sqlite3 cursor)
-def query(sql_query:str):
+def query(self, sql_query:str):
 
     """
     Excutes and SQL query against a database connection and returns the result as a list of tuples
