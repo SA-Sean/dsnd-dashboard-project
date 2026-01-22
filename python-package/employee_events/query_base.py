@@ -1,5 +1,4 @@
 # Import any dependencies needed to execute sql queries
-import sql_execution
 from sql_execution import QueryMixin
 
 

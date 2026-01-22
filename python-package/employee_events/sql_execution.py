@@ -21,7 +21,7 @@ class QueryMixin:
     def pandas_query(self, sql_query:str) -> pd.DataFrame:
 
         """
-        Excutes and SQL query against a database connection and returns the result as a padas dataframe
+        Excutes a SQL query and returns the result as a padas dataframe
         
         """
 
@@ -45,60 +45,60 @@ class QueryMixin:
             return pd.DataFrame()   # return empty dataframe on failure
         
 
-    # Define a method named `query`
-    # that receives an sql_query as a string
-    # and returns the query's result as
-    # a list of tuples. (You will need
-    # to use an sqlite3 cursor)
-def query(self, sql_query:str):
+        # Define a method named `query_tupple` (using 'query_tupple' to avoid the clash with the decorator method of the same anme below that we cannot change!)
+        # that receives an sql_query as a string
+        # and returns the query's result as
+        # a list of tuples. (You will need
+        # to use an sqlite3 cursor)
+    def query_tupple(self, sql_query:str):
 
-    """
-    Excutes and SQL query against a database connection and returns the result as a list of tuples
+        """
+        Excutes and SQL query and returns the result as a list of tuples
 
-    """
+        """
+        
+        try:
+            # establish db connection
+            db_conn = connect(db_path)
+
+            # create cursor object to run the query
+            cursor = db_conn.cursor()
+
+            # execute the query
+            cursor.execute(sql_query)
+
+            # fetch all the results as a list of tuples
+            result = cursor.fetchall()
+
+            # close db connection
+            db_conn.close()
+
+            return result
+
+        except Exception as e:
+
+                # catch and show any errors that occure in the DB interaction
+                print(f"An error with the database interaction occurred: {e}")
+
+                return pd.DataFrame()   # return empty dataframe on failure
+
     
-    try:
-        # establish db connection
-        db_conn = connect(db_path)
+    # Leave this code unchanged
+    def query(func):
+        """
+        Decorator that runs a standard sql execution
+        and returns a list of tuples
+        """
 
-        # create cursor object to run the query
-        cursor = db_conn.cursor()
-
-        # execute the query
-        cursor.execute(sql_query)
-
-        # fetch all the results as a list of tuples
-        result = cursor.fetchall()
-
-        # close db connection
-        db_conn.close()
-
-        return result
-
-    except Exception as e:
-
-            # catch and show any errors that occure in the DB interaction
-            print(f"An error with the database interaction occurred: {e}")
-
-            return pd.DataFrame()   # return empty dataframe on failure
-
- 
- # Leave this code unchanged
-def query(func):
-    """
-    Decorator that runs a standard sql execution
-    and returns a list of tuples
-    """
-
-    @wraps(func)
-    def run_query(*args, **kwargs):
-        query_string = func(*args, **kwargs)
-        connection = connect(db_path)
-        cursor = connection.cursor()
-        result = cursor.execute(query_string).fetchall()
-        connection.close()
-        return result
-    
-    return run_query
+        @wraps(func)
+        def run_query(*args, **kwargs):
+            query_string = func(*args, **kwargs)
+            connection = connect(db_path)
+            cursor = connection.cursor()
+            result = cursor.execute(query_string).fetchall()
+            connection.close()
+            return result
+        
+        return run_query
 
 
