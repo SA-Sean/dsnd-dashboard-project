@@ -1,0 +1,2 @@
+include employee_events/employee_events.db
+include employee_events/requirements.txt

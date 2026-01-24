@@ -1,5 +1,7 @@
 # Import the QueryBase class
 from query_base import QueryBase
+from employee_events import QueryBase
+
 
 # Import dependencies for sql execution
 

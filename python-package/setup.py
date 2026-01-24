@@ -9,6 +9,7 @@ setup_args = dict(
     version='0.0',
     description='SQL Query API',
     packages=find_packages(),
+    include_package_data=True,
     package_data={'': ['employee_events.db', 'requirements.txt']},
     install_requirements=requirements,
     )
