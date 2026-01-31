@@ -2,10 +2,10 @@ from fasthtml.common import *
 import matplotlib.pyplot as plt
 
 # Import QueryBase, Employee, Team from employee_events
-#### YOUR CODE HERE
+from employee_events import QueryBase, Employee, Team
 
 # import the load_model function from the utils.py file
-#### YOUR CODE HERE
+from utils import load_model
 
 """
 Below, we import the parent classes
@@ -24,86 +24,88 @@ from combined_components import FormGroup, CombinedComponent
 
 # Create a subclass of base_components/dropdown
 # called `ReportDropdown`
-#### YOUR CODE HERE
+class ReportDropdown(Dropdown):
     
     # Overwrite the build_component method
     # ensuring it has the same parameters
     # as the Report parent class's method
-    #### YOUR CODE HERE
+    def build_component(self, entity_id, model):
+        
         #  Set the `label` attribute so it is set
         #  to the `name` attribute for the model
-        #### YOUR CODE HERE
+        self.label = model.name
         
         # Return the output from the
         # parent class's build_component method
-        #### YOUR CODE HERE
+        return super().build_component(entity_id, model)
     
     # Overwrite the `component_data` method
     # Ensure the method uses the same parameters
     # as the parent class method
-    #### YOUR CODE HERE
+    def component_data(self, entity_id, model):
+        
         # Using the model argument
         # call the employee_events method
         # that returns the user-type's
         # names and ids
-
+        return model.names() # returns a list of tuples containing the employee/team names and id's
+        
 
 # Create a subclass of base_components/BaseComponent
 # called `Header`
-#### YOUR CODE HERE
+class Header(BaseComponent):
 
     # Overwrite the `build_component` method
     # Ensure the method has the same parameters
     # as the parent class
-    #### YOUR CODE HERE
-        
+    def build_component(self, entity_id, model):
+                
         # Using the model argument for this method
         # return a fasthtml H1 objects
         # containing the model's name attribute
-        #### YOUR CODE HERE
+        return H1(model.name.title(), cls='container')
           
 
 # Create a subclass of base_components/MatplotlibViz
 # called `LineChart`
-#### YOUR CODE HERE
+class LineChart(MatplotlibViz):
     
     # Overwrite the parent class's `visualization`
     # method. Use the same parameters as the parent
-    #### YOUR CODE HERE
-    
-
-        # Pass the `asset_id` argument to
+    def visualization(self, entity_id, model):
+        
+        # Pass the `asset_id` {entity_id rather ??} argument to
         # the model's `event_counts` method to
         # receive the x (Day) and y (event count)
-        #### YOUR CODE HERE
+        df_EventCounts = model.event_counts(entity_id)
         
         # Use the pandas .fillna method to fill nulls with 0
-        #### YOUR CODE HERE
+        df_EventCounts.fillna(0, inplace=True)
         
         # User the pandas .set_index method to set
         # the date column as the index
-        #### YOUR CODE HERE
+        df_EventCounts.set_index('event_date', inplace=True) # do we need to convert to datetime ?
         
         # Sort the index
-        #### YOUR CODE HERE
+        df_EventCounts.sort_index(inplace = True) # will sort in ascending manner
         
         # Use the .cumsum method to change the data
         # in the dataframe to cumulative counts
-        #### YOUR CODE HERE
+        df_EventCounts = df_EventCounts.cumsum()
         
         
         # Set the dataframe columns to the list
         # ['Positive', 'Negative']
-        #### YOUR CODE HERE
+        df_EventCounts.columns = ['Positive', 'Negative']
         
         # Initialize a pandas subplot
         # and assign the figure and axis
         # to variables
-        #### YOUR CODE HERE
+        fig, ax = plt.subplots(figsize=(10,6))
         
         # call the .plot method for the
         # cumulative counts dataframe
-        #### YOUR CODE HERE
+        df_EventCounts.plot()
         
         # pass the axis variable
         # to the `.set_axis_styling`
@@ -112,38 +114,42 @@ from combined_components import FormGroup, CombinedComponent
         # the border color and font color to black. 
         # Reference the base_components/matplotlib_viz file 
         # to inspect the supported keyword arguments
-        #### YOUR CODE HERE
+        self.set_axis_styling(ax, bordercolor='black', fontcolor='black')
         
         # Set title and labels for x and y axis
-        #### YOUR CODE HERE
+        ax.set_title(f'{model.name} Cumulative Events')
+        ax.set_xlabel(f'Event Date')
+        ax.set_ylabel(f'Cumulative Event Count')
 
 
 # Create a subclass of base_components/MatplotlibViz
 # called `BarChart`
-#### YOUR CODE HERE
+class BarChart(MatplotlibViz):
 
     # Create a `predictor` class attribute
     # assign the attribute to the output
     # of the `load_model` utils function
-    #### YOUR CODE HERE
+    predictor = load_model()
 
     # Overwrite the parent class `visualization` method
     # Use the same parameters as the parent
-    #### YOUR CODE HERE
-
-        # Using the model and asset_id arguments
+    def visualization(self, entity_id, model):
+        
+        # Using the model and asset_id {'entity_id ?} arguments
         # pass the `asset_id` to the `.model_data` method
         # to receive the data that can be passed to the machine
         # learning model
-        #### YOUR CODE HERE
+        df_modelData = model.model_data(entity_id)
         
         # Using the predictor class attribute
         # pass the data to the `predict_proba` method
-        #### YOUR CODE HERE
+        probablilities = predictor.predict_proba(df_modelData)
         
         # Index the second column of predict_proba output
         # The shape should be (<number of records>, 1)
-        #### YOUR CODE HERE
+        prob_positive_class = probablilities[:,1]
+        print(f'length of positive class probability: {len(prob_positive_class)}')
+        print(f'shape of the posiive class probability: {prob_positive_class.shape}')
         
         
         # Below, create a `pred` variable set to
@@ -151,14 +157,18 @@ from combined_components import FormGroup, CombinedComponent
         #
         # If the model's name attribute is "team"
         # We want to visualize the mean of the predict_proba output
-        #### YOUR CODE HERE
-            
+        pred = None
+
+        if model.name == 'team':
+              pred = prob_positive_class.mean()
+
         # Otherwise set `pred` to the first value
         # of the predict_proba output
-        #### YOUR CODE HERE
+        else:
+            pred = prob_positive_class[0,0]
         
         # Initialize a matplotlib subplot
-        #### YOUR CODE HERE
+        fig, ax = plt.subplots(figsize=(12,9))
         
         # Run the following code unchanged
         ax.barh([''], [pred])
@@ -168,33 +178,36 @@ from combined_components import FormGroup, CombinedComponent
         # pass the axis variable
         # to the `.set_axis_styling`
         # method
-        #### YOUR CODE HERE
+        self.set_axis_styling(ax = ax)
  
 # Create a subclass of combined_components/CombinedComponent
 # called Visualizations       
-#### YOUR CODE HERE
-
+class Visualizations(CombinedComponent):
+    
     # Set the `children`
     # class attribute to a list
     # containing an initialized
     # instance of `LineChart` and `BarChart`
-    #### YOUR CODE HERE
+    children = [LineChart(), BarChart()]
 
     # Leave this line unchanged
     outer_div_type = Div(cls='grid')
             
 # Create a subclass of base_components/DataTable
 # called `NotesTable`
-#### YOUR CODE HERE
+class NotesTable(DataTable):
 
     # Overwrite the `component_data` method
     # using the same parameters as the parent class
-    #### YOUR CODE HERE
-        
+    def component_data(self, entity_id, model):
+        """
+        Returns a Pandas DataFrame of the 'notes' table containing notes about employees and teams
+
+        """         
         # Using the model and entity_id arguments
         # pass the entity_id to the model's .notes 
         # method. Return the output
-        #### YOUR CODE HERE
+        return model.notes(entity_id)
     
 
 class DashboardFilters(FormGroup):
@@ -217,31 +230,37 @@ class DashboardFilters(FormGroup):
     
 # Create a subclass of CombinedComponents
 # called `Report`
-#### YOUR CODE HERE
+class Report(CombinedComponent):
 
     # Set the `children`
     # class attribute to a list
     # containing initialized instances 
     # of the header, dashboard filters,
     # data visualizations, and notes table
-    #### YOUR CODE HERE
+    children = [
+        Header(), 
+        DashboardFilters(),
+        Visualizations(),
+        NotesTable(),
+    ]
 
 # Initialize a fasthtml app 
-#### YOUR CODE HERE
+app, route = fast_app()
 
 # Initialize the `Report` class
-#### YOUR CODE HERE
+report = Report()
 
 
 # Create a route for a get request
 # Set the route's path to the root
-#### YOUR CODE HERE
+@route("/")
+def get():
 
     # Call the initialized report
     # pass the integer 1 and an instance
     # of the Employee class as arguments
     # Return the result
-    #### YOUR CODE HERE
+    return report(1, Employee())
 
 # Create a route for a get request
 # Set the route's path to receive a request
@@ -250,13 +269,14 @@ class DashboardFilters(FormGroup):
 # an ID of `2`. 
 # parameterize the employee ID 
 # to a string datatype
-#### YOUR CODE HERE
+@route('/employee/{id}')
+def get(id:str):
 
     # Call the initialized report
     # pass the ID and an instance
     # of the Employee SQL class as arguments
     # Return the result
-    #### YOUR CODE HERE
+    return report(id, Employee())
 
 # Create a route for a get request
 # Set the route's path to receive a request
@@ -265,13 +285,14 @@ class DashboardFilters(FormGroup):
 # an ID of `2`. 
 # parameterize the team ID 
 # to a string datatype
-#### YOUR CODE HERE
-
+@route('/team/{id}')
+def get(id:str):
+    
     # Call the initialized report
     # pass the id and an instance
     # of the Team SQL class as arguments
     # Return the result
-    #### YOUR CODE HERE
+   return report(id, Team())
 
 
 # Keep the below code unchanged!

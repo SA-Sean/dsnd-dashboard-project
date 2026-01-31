@@ -1,5 +1,5 @@
 # Import the QueryBase class
-from query_base import QueryBase
+#from query_base import QueryBase
 from employee_events import QueryBase
 
 
@@ -27,7 +27,7 @@ class Team(QueryBase):
         # from the team table for all teams
         # in the database
         sql_query = f"""
-                        SELECT team_id, team_name
+                        SELECT team_name, team_id
                         FROM {self.name}
                     """
         return super().query_tupple(sql_query)
