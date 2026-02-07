@@ -1,5 +1,11 @@
 from fasthtml.common import *
-import matplotlib.pyplot as plt
+import matplotlib.pylab as plt
+from matplotlib import colormaps
+import matplotlib.pyplot
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
+import numpy as np
+import pandas as pd
 
 # Import QueryBase, Employee, Team from employee_events
 from employee_events import QueryBase, Employee, Team
@@ -9,7 +15,7 @@ from utils import load_model
 
 """
 Below, we import the parent classes
-you will use for subclassing
+used for subclassing
 """
 from base_components import (
     Dropdown,
@@ -33,7 +39,7 @@ class ReportDropdown(Dropdown):
         
         #  Set the `label` attribute so it is set
         #  to the `name` attribute for the model
-        self.label = model.name
+        self.label = model.name.title()
         
         # Return the output from the
         # parent class's build_component method
@@ -63,7 +69,7 @@ class Header(BaseComponent):
         # Using the model argument for this method
         # return a fasthtml H1 objects
         # containing the model's name attribute
-        return H1(model.name.title(), cls='container')
+        return H1(f'{model.name.title()} Performance', cls='container')
           
 
 # Create a subclass of base_components/MatplotlibViz
@@ -101,12 +107,27 @@ class LineChart(MatplotlibViz):
         # Initialize a pandas subplot
         # and assign the figure and axis
         # to variables
-        fig, ax = plt.subplots(figsize=(10,6))
+        fig, ax = plt.subplots(figsize=(12,9))
+
+
+        # To add a color scale/intensity to the visualisation:
+        # create and choose a colormap (eg: 'viridis', 'RdYlGn', 'coolwarm')
+        cmap = colormaps.get_cmap('coolwarm')
         
-        # call the .plot method for the
-        # cumulative counts dataframe
-        df_EventCounts.plot()
+        # plot lines using colors from the color map
+        df_EventCounts['Positive'].plot(ax=ax, color=cmap(0.8), label='Positive')
+        df_EventCounts['Negative'].plot(ax=ax, color=cmap(0.2), label='Negative')
         
+        # create a ScalarMapable to generate the colorbar
+        # Normalise defines the data range the color scale represents
+        norm = mcolors.Normalize(vmin = df_EventCounts.min().min(), vmax=df_EventCounts.max().max())
+        sm = cm.ScalarMappable(cmap=cmap, norm = norm)
+        sm.set_array([]) #required for matplotlib to link data to the bar
+
+        # add color bar to figure
+        cbar = fig.colorbar(sm, ax=ax)
+        cbar.set_label('Cumulative Count Intensity', rotation=270, labelpad=15)
+
         # pass the axis variable
         # to the `.set_axis_styling`
         # method
@@ -117,9 +138,10 @@ class LineChart(MatplotlibViz):
         self.set_axis_styling(ax, bordercolor='black', fontcolor='black')
         
         # Set title and labels for x and y axis
-        ax.set_title(f'{model.name} Cumulative Events')
-        ax.set_xlabel(f'Event Date')
-        ax.set_ylabel(f'Cumulative Event Count')
+        ax.set_title(f'{model.name.title()} Cumulative Events', fontsize=20, pad = 20)
+        ax.set_xlabel('Event Date', fontsize = 12)
+        ax.set_ylabel('Event Count', fontsize = 12)
+        ax.legend()
 
 
 # Create a subclass of base_components/MatplotlibViz
@@ -143,14 +165,12 @@ class BarChart(MatplotlibViz):
         
         # Using the predictor class attribute
         # pass the data to the `predict_proba` method
-        probablilities = predictor.predict_proba(df_modelData)
+        probablilities = self.predictor.predict_proba(df_modelData)
         
         # Index the second column of predict_proba output
         # The shape should be (<number of records>, 1)
-        prob_positive_class = probablilities[:,1]
-        print(f'length of positive class probability: {len(prob_positive_class)}')
-        print(f'shape of the posiive class probability: {prob_positive_class.shape}')
-        
+        prob_positive_class = probablilities[:,[1]] # change the single column to a 2D array format which sckit-learn needs for futher processing
+        #prob_positive_class = probablilities[:,1].reshape(-1,1) # can also use this method to do the line above        
         
         # Below, create a `pred` variable set to
         # the number we want to visualize
@@ -165,20 +185,38 @@ class BarChart(MatplotlibViz):
         # Otherwise set `pred` to the first value
         # of the predict_proba output
         else:
-            pred = prob_positive_class[0,0]
+            pred = prob_positive_class[0,0] # ensure we select the first value from the 2D array to pass into ax.barh which needs a 1D scalar
         
         # Initialize a matplotlib subplot
         fig, ax = plt.subplots(figsize=(12,9))
         
+        # To add a color scale/intensity to the plot:
+        # Setup the Color Scale
+        # 'RdYlGn_r' goes from Green (low risk) to Red (high risk)
+        cmap = colormaps.get_cmap('RdYlGn_r')
+        norm = mcolors.Normalize(vmin=0, vmax=1)
+        bar_color = cmap(norm(pred)) # Pick the specific color for our prediction value
+
+        # Plot the bar with the dynamic color
+        ax.barh([''], [pred], color=bar_color, edgecolor='black', height=0.6)
+
+        #Add the Colorbar (The Visual Scale)
+        sm = cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])
+        cbar = fig.colorbar(sm, ax=ax, orientation='vertical', pad=0.05)
+        cbar.set_label('Risk Level (0 = Low, 1 = High)', fontsize=12)
+
         # Run the following code unchanged
-        ax.barh([''], [pred])
         ax.set_xlim(0, 1)
-        ax.set_title('Predicted Recruitment Risk', fontsize=20)
+        ax.set_title('Predicted Recruitment Risk', fontsize=20, pad=20)
         
         # pass the axis variable
-        # to the `.set_axis_styling`
-        # method
-        self.set_axis_styling(ax = ax)
+        # to the `.set_axis_styling` method
+        self.set_axis_styling(ax = ax, bordercolor='black', fontcolor='black')
+
+        # Add a text label on the bar showing the exact percentage
+        ax.text(pred + 0.01, 0, f'{pred:.2%}', va='center', fontsize=14, fontweight='bold')
+
  
 # Create a subclass of combined_components/CombinedComponent
 # called Visualizations       
@@ -207,12 +245,12 @@ class NotesTable(DataTable):
         # Using the model and entity_id arguments
         # pass the entity_id to the model's .notes 
         # method. Return the output
-        return model.notes(entity_id)
+        return model.notes(entity_id).sort_values(by='note_date', ascending=False)
     
 
 class DashboardFilters(FormGroup):
 
-    id = "top-filters"
+    id = "top-filters"          # id, action and method defined for the HTML form (**div_args for the form)
     action = "/update_data"
     method="POST"
 
@@ -227,6 +265,8 @@ class DashboardFilters(FormGroup):
             id="selector",
             name="user-selection")
         ]
+    
+    outer_div_type = Div(cls='grid')
     
 # Create a subclass of CombinedComponents
 # called `Report`
@@ -298,7 +338,8 @@ def get(id:str):
 # Keep the below code unchanged!
 @app.get('/update_dropdown{r}')
 def update_dropdown(r):
-    dropdown = DashboardFilters.children[1]
+    
+    dropdown = DashboardFilters.children[1] # refering to the ReportDropdown in the children of Dashboard filters
     print('PARAM', r.query_params['profile_type'])
     if r.query_params['profile_type'] == 'Team':
         return dropdown(None, Team())

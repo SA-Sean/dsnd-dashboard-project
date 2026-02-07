@@ -11,11 +11,19 @@ class Radio(BaseComponent):
         self.selected=selected
 
 
-    def build_component(self, entity_id, model):
+    def build_component(self, entity_id, model, current_selection = None):
 
         children = []
+
+        # If no current selection for the Radio button is passed, fallback to model default
+        active_val = current_selection if current_selection else model.name
+
         for value in self.values:
-            input_child = Input(type="radio", id=value.lower(), name=self.name, value=value, hx_get=self.hx_get, hx_target=self.hx_target, checked="checked" if value==model.name.title() else "")
+            
+            # check if specific radio matches the active value - this is to stop the radio button from always going back to the 'Team' setting after pushing submit
+            is_checked = value.lower() == active_val.lower()
+
+            input_child = Input(type="radio", id=value.lower(), name=self.name, value=value, hx_get=self.hx_get, hx_target=self.hx_target, checked=is_checked)
             label_child = Label(value, _for=value.lower())
             children.append(input_child)
             children.append(label_child)

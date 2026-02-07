@@ -6,7 +6,7 @@ requirements = (cwd / 'employee_events' / 'requirements.txt').read_text().split(
 
 setup_args = dict(
     name='employee_events',
-    version='0.0.1',
+    version='0.0.5',
     description='SQL Query API',
     packages=find_packages(),
     include_package_data=True,

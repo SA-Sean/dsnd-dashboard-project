@@ -13,7 +13,7 @@ class DataTable(BaseComponent):
 
             table = Table(
                 Tr(
-                    Th(column) for column in data.columns
+                    Th(column.title()) for column in data.columns
                 )
             )
 

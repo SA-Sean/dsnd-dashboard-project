@@ -19,10 +19,10 @@ class CombinedComponent:
         called = []
         for child in self.children:
             if isinstance(child, FT):
-                called.append(child())
+                called.append(Div(child()))
                 
             else:
-                called.append(child(userid, model))
+                called.append(Div(child(userid, model)))
         
         return called
     
