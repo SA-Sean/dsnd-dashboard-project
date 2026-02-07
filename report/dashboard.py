@@ -284,8 +284,20 @@ class Report(CombinedComponent):
         NotesTable(),
     ]
 
-# Initialize a fasthtml app 
-app, route = fast_app()
+# Initialize a fasthtml app
+
+# Define an emoji favicon link 😎
+favicon_link = Link(
+    rel="icon", 
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>\U0001F4CA</text></svg>"
+)
+
+app, route = fast_app(
+
+    hdrs=(favicon_link,),
+    title="Udacity Performance"
+
+)
 
 # Initialize the `Report` class
 report = Report()
