@@ -1,6 +1,8 @@
 
 # Data Science Dashboard ![Static Badge](https://img.shields.io/badge/version-1.0.0-green)
 
+[![Tests](https://github.com/SA-Sean/dsnd-dashboard-project/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/SA-Sean/dsnd-dashboard-project/actions/workflows/test.yml)
+
 This repository contains code and resources to run a basic web dashboard showing Employee and Team events, classified as either a 'positive' or 'negative' event. The web dashboard is generated using [FastHTML](https://www.fastht.ml/). Additionally the repository contains code and a model for predicting the likely hood of an employee to be recruited, also displayed on dashboard.
 
 ## Created
